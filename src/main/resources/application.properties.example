@@ -1,0 +1,20 @@
+server.port=8091
+
+# Absolute path to the MIRACUM directories
+pathToMIRACUM=/path/to/MIRACUM-Pipe-docker
+
+# Url on which the maf mapper listens
+mapperUrl=localhost:8082/
+
+## Time values for the quartz scheduler
+#  StartTime must be an int and is given in hours
+quartz.startTime=5
+#  EndTime must be an int and is given in hours
+#  It should be significantly more than the start time
+#  It kills the scheduler in case it has not been
+#  terminated
+#  Note that an too low endTime might lead to failure
+#  in observing the pipeline
+quartz.endTime=15
+# intervaltime must be an int and is given in minutes
+quartz.intervalTime=15
