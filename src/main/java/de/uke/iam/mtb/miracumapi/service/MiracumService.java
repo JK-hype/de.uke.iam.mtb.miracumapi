@@ -53,10 +53,10 @@ import de.uke.iam.lib.json.GsonHelper;
 import de.uke.iam.mtb.dto.miracum.MiracumInputDetailsDto;
 import de.uke.iam.mtb.dto.miracum.MiracumMafDto;
 import de.uke.iam.mtb.miracumapi.dao.MiracumInputDetailsRepository;
-import de.uke.iam.mtb.miracumapi.dao.MiracumPathRepository;
+import de.uke.iam.mtb.miracumapi.dao.MiracumPathsRepository;
 import de.uke.iam.mtb.miracumapi.deserializer.MiracumMafDtoDeserializer;
 import de.uke.iam.mtb.miracumapi.model.MiracumInputDetailsEntity;
-import de.uke.iam.mtb.miracumapi.model.MiracumPathEntity;
+import de.uke.iam.mtb.miracumapi.model.MiracumPathsEntity;
 import de.uke.iam.mtb.miracumapi.serializer.MiracumInputDetailsToYamlSerializer;
 import de.uke.iam.mtb.miracumapi.util.MiracumPathBuilder;
 import de.uke.iam.mtb.miracumapi.util.MiracumPathBuilder.OutputFile;
@@ -68,7 +68,7 @@ public class MiracumService {
     private static final Logger LOGGER = LoggerFactory.getLogger(MiracumService.class);
 
     private final MiracumInputDetailsRepository inputDetailsRepository;
-    private final MiracumPathRepository pathRepository;
+    private final MiracumPathsRepository pathRepository;
     private final MiracumPathBuilder pathBuilder;
     private final String pathToMiracum;
     private final String mapperUrl;
@@ -76,7 +76,7 @@ public class MiracumService {
     private final int endTime;
     private final int intervalTime;
 
-    public MiracumService(MiracumInputDetailsRepository inputDetailsRepository, MiracumPathRepository pathRepository,
+    public MiracumService(MiracumInputDetailsRepository inputDetailsRepository, MiracumPathsRepository pathRepository,
             @Value("${pathToMIRACUM}") String pathToMiracum, @Value("${mapperUrl}") String mapperUrl,
             @Value("${quartz.startTime}") int startTime,
             @Value("${quartz.endTime}") int endTime, @Value("${quartz.intervalTime}") int intervalTime) {
@@ -285,17 +285,17 @@ public class MiracumService {
         LOGGER.info("patient.yaml of " + inputDetails.getPatientNameWithUnderscore() + " in " + pathToPatientInput
                 + " was created.");
 
-        savePaths(inputDetails);
-        saveYaml(inputDetails);
+        savePathsInDatabase(inputDetails);
+        saveYamlInDatabase(inputDetails);
     }
 
-    private void saveYaml(MiracumInputDetailsDto inputDetails) {
+    private void saveYamlInDatabase(MiracumInputDetailsDto inputDetails) {
         ModelMapper mapper = new ModelMapper();
         inputDetailsRepository.save(mapper.map(inputDetails, MiracumInputDetailsEntity.class));
     }
 
-    private void savePaths(MiracumInputDetailsDto inputDetails) {
-        MiracumPathEntity pathEntity = new MiracumPathEntity();
+    private void savePathsInDatabase(MiracumInputDetailsDto inputDetails) {
+        MiracumPathsEntity pathEntity = new MiracumPathsEntity();
         pathEntity.setPatientId(inputDetails.getPatientId());
         pathEntity.setPathToInput(pathBuilder.buildFilePathToPatientInput(inputDetails.getPatientNameWithUnderscore()));
         pathEntity.setPathToLogs(pathBuilder.buildFilePathToLogs(inputDetails));
@@ -306,7 +306,7 @@ public class MiracumService {
     }
 
     public FileSystemResource getMiracumReport(String patientId) {
-        Optional<MiracumPathEntity> pathOpt = getPathById(patientId);
+        Optional<MiracumPathsEntity> pathOpt = getPathById(patientId);
         String pathToReport;
         if (pathOpt.isPresent()) {
             LOGGER.info("Found " + pathOpt);
@@ -319,7 +319,7 @@ public class MiracumService {
     }
 
     public FileSystemResource getMafFile(String patientId) {
-        Optional<MiracumPathEntity> pathOpt = getPathById(patientId);
+        Optional<MiracumPathsEntity> pathOpt = getPathById(patientId);
         String pathToMaf;
         if (pathOpt.isPresent()) {
             LOGGER.info("Found " + pathOpt);
@@ -364,7 +364,7 @@ public class MiracumService {
                     + inputDetails.getPatientId() + ")");
             e.printStackTrace();
         }
-        LOGGER.error("Succesfully deleted " + inputDetails.getPatientNameWithUnderscore() + " ("
+        LOGGER.info("Succesfully deleted " + inputDetails.getPatientNameWithUnderscore() + " ("
                 + inputDetails.getPatientId() + ")");
     }
 
@@ -381,7 +381,7 @@ public class MiracumService {
         }
     }
 
-    private Optional<MiracumPathEntity> getPathById(String patientId) {
+    private Optional<MiracumPathsEntity> getPathById(String patientId) {
         return pathRepository.findById(patientId);
     }
 }

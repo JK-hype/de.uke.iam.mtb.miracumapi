@@ -55,4 +55,6 @@ public class MiracumConverter {
         return yamlConfDto;
     }
 
+    private MiracumConverter() {
+    }
 }
