@@ -16,6 +16,7 @@ import lombok.Data;
 public class MiracumInputDetailsEntity {
 
     @Id
+    @Column(name = "patient_id")
     private String patientId;
     private String sex;
     @Column(name = "annotation_of_germline_findings")
