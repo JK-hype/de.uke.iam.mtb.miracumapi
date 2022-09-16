@@ -70,7 +70,7 @@ public class MiracumPathBuilder {
                 break;
         }
 
-        protocolWithPatientName += inputDetails.getPatientName();
+        protocolWithPatientName += inputDetails.getPatientNameWithUnderscore();
 
         return protocolWithPatientName;
     }

@@ -22,13 +22,14 @@ public class MiracumConverter {
             try {
                 jobDataMap.put(field.getName(), field.get(inputDetails));
             } catch (IllegalArgumentException | IllegalAccessException e) {
-                LOGGER.error("Failed to convert patient data of " + inputDetails.getPatientName() + " to JobDataMap");
+                LOGGER.error("Failed to convert patient data of " + inputDetails.getPatientNameWithUnderscore()
+                        + " to JobDataMap");
                 e.printStackTrace();
                 return new JobDataMap();
             }
         }
 
-        jobDataMap.put("patientName", inputDetails.getPatientName());
+        jobDataMap.put("patientName", inputDetails.getPatientNameWithUnderscore());
         return jobDataMap;
     }
 

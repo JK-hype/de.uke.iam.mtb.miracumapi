@@ -111,7 +111,7 @@ public class MiracumService {
              * them
              */
             ProcessBuilder processBuilder = new ProcessBuilder("./miracum_pipe.sh",
-                    "-d" + inputDetails.getPatientName(), "-p" + inputDetails.getProtocol().toString(),
+                    "-d" + inputDetails.getPatientNameWithUnderscore(), "-p" + inputDetails.getProtocol().toString(),
                     "-vbeta");
             processBuilder.directory(new File(pathToMiracum));
             processBuilder.redirectErrorStream(true);
@@ -264,23 +264,25 @@ public class MiracumService {
 
     public void saveYamlConf(MiracumInputDetailsDto inputDetails)
             throws StreamWriteException, DatabindException, IOException {
-        String pathToPatientInput = pathBuilder.buildFilePathToPatientInput(inputDetails.getPatientName());
+        String pathToPatientInput = pathBuilder
+                .buildFilePathToPatientInput(inputDetails.getPatientNameWithUnderscore());
         ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
         String[] files = new File(pathToPatientInput).list();
         inputDetails.setNumberOfFilePairs(
-                (int) (Arrays.asList(files).stream().filter(f -> f.contains(inputDetails.getPatientName())).count()));
+                (int) (Arrays.asList(files).stream()
+                        .filter(f -> f.contains(inputDetails.getPatientNameWithUnderscore())).count()));
         objectMapper.registerModule(
                 new SimpleModule().addSerializer(MiracumInputDetailsDto.class,
                         new MiracumInputDetailsToYamlSerializer()));
 
         File patientYaml = new File(pathToPatientInput + "/patient.yaml");
         if (patientYaml.getParentFile().mkdirs()) {
-            LOGGER.info("Created direcotry of " + inputDetails.getPatientName());
+            LOGGER.info("Created direcotry of " + inputDetails.getPatientNameWithUnderscore());
         }
         // saves the configruation yaml in
         // /"pathToMIRACUM"/assets/input/"patientFirstname"_"patientLastName"
         objectMapper.writeValue(patientYaml, inputDetails);
-        LOGGER.info("patient.yaml of " + inputDetails.getPatientName() + " in " + pathToPatientInput
+        LOGGER.info("patient.yaml of " + inputDetails.getPatientNameWithUnderscore() + " in " + pathToPatientInput
                 + " was created.");
 
         savePaths(inputDetails);
@@ -295,7 +297,7 @@ public class MiracumService {
     private void savePaths(MiracumInputDetailsDto inputDetails) {
         MiracumPathEntity pathEntity = new MiracumPathEntity();
         pathEntity.setPatientId(inputDetails.getPatientId());
-        pathEntity.setPathToInput(pathBuilder.buildFilePathToPatientInput(inputDetails.getPatientName()));
+        pathEntity.setPathToInput(pathBuilder.buildFilePathToPatientInput(inputDetails.getPatientNameWithUnderscore()));
         pathEntity.setPathToLogs(pathBuilder.buildFilePathToLogs(inputDetails));
         pathEntity.setPathToMaf(pathBuilder.buildFilePathToPatientOutputFile(inputDetails, OutputFile.MAF));
         pathEntity.setPathToReport(pathBuilder.buildFilePathToPatientOutputFile(inputDetails, OutputFile.REPORT));
@@ -330,12 +332,12 @@ public class MiracumService {
     }
 
     public String getFastQDirectory(MiracumInputDetailsDto inputDetails) {
-        return pathBuilder.buildFilePathToPatientInput(inputDetails.getPatientName());
+        return pathBuilder.buildFilePathToPatientInput(inputDetails.getPatientNameWithUnderscore());
     }
 
     public List<String> getFastQNames(MiracumInputDetailsDto inputDetails, int numberOfFiles) {
         ArrayList<String> names = new ArrayList<>();
-        String patientName = inputDetails.getPatientName();
+        String patientName = inputDetails.getPatientNameWithUnderscore();
         for (int i = 1; i <= numberOfFiles; i++) {
             names.add(patientName + "_" + i + "_R1_001.fastq.gz");
             names.add(patientName + "_" + i + "_R2_001.fastq.gz");
@@ -344,24 +346,26 @@ public class MiracumService {
     }
 
     public void deletePatientDirectories(MiracumInputDetailsDto inputDetails) {
-        String pathToInputPatient = pathBuilder.buildFilePathToPatientInput(inputDetails.getPatientName());
+        String pathToInputPatient = pathBuilder
+                .buildFilePathToPatientInput(inputDetails.getPatientNameWithUnderscore());
         String pathToPatientOutput = pathBuilder.buildFilePathToPatientOutput(inputDetails);
 
         try {
             FileUtils.deleteDirectory(new File(pathToInputPatient));
         } catch (IOException e) {
-            LOGGER.error("Failed to delete input folder of " + inputDetails.getPatientName() + " ("
+            LOGGER.error("Failed to delete input folder of " + inputDetails.getPatientNameWithUnderscore() + " ("
                     + inputDetails.getPatientId() + ")");
             e.printStackTrace();
         }
         try {
             FileUtils.deleteDirectory(new File(pathToPatientOutput));
         } catch (IOException e) {
-            LOGGER.error("Failed to delete output folder of " + inputDetails.getPatientName() + " ("
+            LOGGER.error("Failed to delete output folder of " + inputDetails.getPatientNameWithUnderscore() + " ("
                     + inputDetails.getPatientId() + ")");
             e.printStackTrace();
         }
-        LOGGER.error("Succesfully deleted " + inputDetails.getPatientName() + " (" + inputDetails.getPatientId() + ")");
+        LOGGER.error("Succesfully deleted " + inputDetails.getPatientNameWithUnderscore() + " ("
+                + inputDetails.getPatientId() + ")");
     }
 
     public Optional<MiracumInputDetailsDto> getInputDetailsById(String patientId) {

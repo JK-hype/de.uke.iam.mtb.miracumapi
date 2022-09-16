@@ -26,7 +26,7 @@ public class MiracumInputDetailsToYamlSerializer extends StdSerializer<MiracumIn
         jsonGenerator.writeObjectFieldStart("common");
         jsonGenerator.writeObjectFieldStart("files");
         jsonGenerator.writeObjectFieldStart("panel");
-        jsonGenerator.writeStringField("tumor", inputDetails.getPatientName() + "_");
+        jsonGenerator.writeStringField("tumor", inputDetails.getPatientNameWithUnderscore() + "_");
         jsonGenerator.writeStringField("numberOfFiles", Integer.toString(inputDetails.getNumberOfFilePairs()));
         jsonGenerator.writeEndObject();
         jsonGenerator.writeEndObject();

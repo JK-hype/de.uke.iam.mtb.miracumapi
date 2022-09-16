@@ -56,7 +56,8 @@ public class MiracumController {
         if (inputDetailsOpt.isPresent()) {
             status = HttpStatus.OK;
             new Thread(() -> miracumService.runMiracum(inputDetailsOpt.get())).start();
-            message = "Started MIRACUM pipeline for " + inputDetailsOpt.get().getPatientName() + " (" + id + ")";
+            message = "Started MIRACUM pipeline for " + inputDetailsOpt.get().getPatientNameWithUnderscore() + " (" + id
+                    + ")";
         } else {
             status = HttpStatus.BAD_REQUEST;
             message = "Could not find details for patient with id: " + id;
@@ -125,10 +126,10 @@ public class MiracumController {
         String directory = miracumService.getFastQDirectory(inputDetails);
         HttpStatus status;
         if (!directory.isEmpty()) {
-            LOGGER.info("Returned fastQ directory of " + inputDetails.getPatientName());
+            LOGGER.info("Returned fastQ directory of " + inputDetails.getPatientNameWithUnderscore());
             status = HttpStatus.OK;
         } else {
-            LOGGER.error("Could not create fastQ directory of " + inputDetails.getPatientName());
+            LOGGER.error("Could not create fastQ directory of " + inputDetails.getPatientNameWithUnderscore());
             status = HttpStatus.BAD_REQUEST;
         }
         return new ResponseEntity<>(directory, status);
@@ -148,10 +149,10 @@ public class MiracumController {
         List<String> names = miracumService.getFastQNames(inputDetails, numberOfFilePairs);
         HttpStatus status;
         if (names.isEmpty() || names.stream().anyMatch(s -> s.isEmpty())) {
-            LOGGER.error("Could not create fastQ names of " + inputDetails.getPatientName());
+            LOGGER.error("Could not create fastQ names of " + inputDetails.getPatientNameWithUnderscore());
             status = HttpStatus.BAD_REQUEST;
         } else {
-            LOGGER.info("Returned fastQ names of " + inputDetails.getPatientName());
+            LOGGER.info("Returned fastQ names of " + inputDetails.getPatientNameWithUnderscore());
             status = HttpStatus.OK;
         }
         return new ResponseEntity<>(names, status);
@@ -176,7 +177,7 @@ public class MiracumController {
         if (inputDetailsOpt.isPresent()) {
             status = HttpStatus.OK;
             miracumService.deletePatientDirectories(inputDetailsOpt.get());
-            message = "Deleted patient " + inputDetailsOpt.get().getPatientName() + " (" + id + ")";
+            message = "Deleted patient " + inputDetailsOpt.get().getPatientNameWithUnderscore() + " (" + id + ")";
         } else {
             status = HttpStatus.BAD_REQUEST;
             message = "Could not find details for patient with id: " + id;
