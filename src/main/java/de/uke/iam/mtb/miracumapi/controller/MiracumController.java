@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import de.uke.iam.mtb.dto.miracum.MiracumInputDetailsDto;
+import de.uke.iam.mtb.dto.miracum.MiracumPathsDto;
 import de.uke.iam.mtb.miracumapi.model.MiracumInputDetailsEntity;
 import de.uke.iam.mtb.miracumapi.service.MiracumService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -163,6 +164,44 @@ public class MiracumController {
         miracumInputDetails.setPatientFirstName(firstName);
         miracumInputDetails.setPatientLastName(lastName);
         return miracumInputDetails;
+    }
+
+    @Operation(summary = "Get by id", description = "")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "<inputDetails>"),
+            @ApiResponse(responseCode = "400", description = "<empty inputDetails>") })
+    @GetMapping(miracumUrl + "/patient/input_details/{id}")
+    public ResponseEntity<MiracumInputDetailsDto> getInputDetailsById(@PathVariable String id) {
+        Optional<MiracumInputDetailsDto> inputDetailsOpt = miracumService.getInputDetailsById(id);
+        HttpStatus status;
+        MiracumInputDetailsDto message;
+        if (inputDetailsOpt.isPresent()) {
+            status = HttpStatus.OK;
+            message = inputDetailsOpt.get();
+        } else {
+            status = HttpStatus.BAD_REQUEST;
+            message = new MiracumInputDetailsDto();
+        }
+        return new ResponseEntity<>(message, status);
+    }
+
+    @Operation(summary = "Get by id", description = "")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "<paths>"),
+            @ApiResponse(responseCode = "400", description = "<empty paths>") })
+    @GetMapping(miracumUrl + "/patient/paths/{id}")
+    public ResponseEntity<MiracumPathsDto> getPathsById(@PathVariable String id) {
+        Optional<MiracumPathsDto> pathsDto = miracumService.getPathsById(id);
+        HttpStatus status;
+        MiracumPathsDto message;
+        if (pathsDto.isPresent()) {
+            status = HttpStatus.OK;
+            message = pathsDto.get();
+        } else {
+            status = HttpStatus.BAD_REQUEST;
+            message = new MiracumPathsDto();
+        }
+        return new ResponseEntity<>(message, status);
     }
 
     @Operation(summary = "Delete by id", description = "")

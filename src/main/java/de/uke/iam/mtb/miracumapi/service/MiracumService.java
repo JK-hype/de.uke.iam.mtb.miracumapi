@@ -52,6 +52,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import de.uke.iam.lib.json.GsonHelper;
 import de.uke.iam.mtb.dto.miracum.MiracumInputDetailsDto;
 import de.uke.iam.mtb.dto.miracum.MiracumMafDto;
+import de.uke.iam.mtb.dto.miracum.MiracumPathsDto;
 import de.uke.iam.mtb.miracumapi.dao.MiracumInputDetailsRepository;
 import de.uke.iam.mtb.miracumapi.dao.MiracumPathsRepository;
 import de.uke.iam.mtb.miracumapi.deserializer.MiracumMafDtoDeserializer;
@@ -68,7 +69,7 @@ public class MiracumService {
     private static final Logger LOGGER = LoggerFactory.getLogger(MiracumService.class);
 
     private final MiracumInputDetailsRepository inputDetailsRepository;
-    private final MiracumPathsRepository pathRepository;
+    private final MiracumPathsRepository pathsRepository;
     private final MiracumPathBuilder pathBuilder;
     private final String pathToMiracum;
     private final String mapperUrl;
@@ -81,7 +82,7 @@ public class MiracumService {
             @Value("${quartz.startTime}") int startTime,
             @Value("${quartz.endTime}") int endTime, @Value("${quartz.intervalTime}") int intervalTime) {
         this.inputDetailsRepository = inputDetailsRepository;
-        this.pathRepository = pathRepository;
+        this.pathsRepository = pathRepository;
         this.pathToMiracum = pathToMiracum;
         this.mapperUrl = mapperUrl;
         this.startTime = startTime;
@@ -302,11 +303,11 @@ public class MiracumService {
         pathEntity.setPathToMaf(pathBuilder.buildFilePathToPatientOutputFile(inputDetails, OutputFile.MAF));
         pathEntity.setPathToReport(pathBuilder.buildFilePathToPatientOutputFile(inputDetails, OutputFile.REPORT));
         pathEntity.setPathToOutput(pathBuilder.buildFilePathToPatientOutput(inputDetails));
-        pathRepository.save(pathEntity);
+        pathsRepository.save(pathEntity);
     }
 
     public FileSystemResource getMiracumReport(String patientId) {
-        Optional<MiracumPathsEntity> pathOpt = getPathById(patientId);
+        Optional<MiracumPathsDto> pathOpt = getPathsById(patientId);
         String pathToReport;
         if (pathOpt.isPresent()) {
             LOGGER.info("Found " + pathOpt);
@@ -319,7 +320,7 @@ public class MiracumService {
     }
 
     public FileSystemResource getMafFile(String patientId) {
-        Optional<MiracumPathsEntity> pathOpt = getPathById(patientId);
+        Optional<MiracumPathsDto> pathOpt = getPathsById(patientId);
         String pathToMaf;
         if (pathOpt.isPresent()) {
             LOGGER.info("Found " + pathOpt);
@@ -364,6 +365,8 @@ public class MiracumService {
                     + inputDetails.getPatientId() + ")");
             e.printStackTrace();
         }
+        pathsRepository.deleteById(inputDetails.getPatientId());
+        inputDetailsRepository.deleteById(inputDetails.getPatientId());
         LOGGER.info("Succesfully deleted " + inputDetails.getPatientNameWithUnderscore() + " ("
                 + inputDetails.getPatientId() + ")");
     }
@@ -381,7 +384,16 @@ public class MiracumService {
         }
     }
 
-    private Optional<MiracumPathsEntity> getPathById(String patientId) {
-        return pathRepository.findById(patientId);
+    public Optional<MiracumPathsDto> getPathsById(String patientId) {
+        ModelMapper mapper = new ModelMapper();
+        Optional<MiracumPathsEntity> pathEntityOpt = pathsRepository.findById(patientId);
+        if (pathEntityOpt.isPresent()) {
+            MiracumPathsEntity pathsEntity = pathEntityOpt.get();
+            LOGGER.info("Found " + pathsEntity);
+            return Optional.of(mapper.map(pathsEntity, MiracumPathsDto.class));
+        } else {
+            LOGGER.warn("Did not found any paths for patient with id: " + patientId);
+            return Optional.empty();
+        }
     }
 }
