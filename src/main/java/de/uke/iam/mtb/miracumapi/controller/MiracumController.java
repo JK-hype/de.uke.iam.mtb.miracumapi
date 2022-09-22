@@ -1,6 +1,7 @@
 package de.uke.iam.mtb.miracumapi.controller;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -117,12 +118,12 @@ public class MiracumController {
     @Operation(summary = "Get by name", description = "")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Returned fastQ directory of <patient name>"),
-            @ApiResponse(responseCode = "400", description = "Could not create fastQ directory of <patient_name>") })
-    @GetMapping(miracumUrl + "/fastq/directory/{firstName}/{lastName}")
+            @ApiResponse(responseCode = "400", description = "Could not create fastQ directory of <patient name>") })
+    @GetMapping(miracumUrl + "/fastq/directory/{first_name}/{last_name}")
     @ResponseBody
-    public ResponseEntity<String> getFastQDirectory(
-            @Parameter(description = "Patient's first name. Cannot be null or empty", required = true) @PathVariable String firstName,
-            @Parameter(description = "Patient's last name. Cannot be null or empty", required = true) @PathVariable String lastName) {
+    public ResponseEntity<String> getFastQDirectoryByName(
+            @Parameter(description = "Patient's first name. Cannot be null or empty", required = true) @PathVariable("first_name") String firstName,
+            @Parameter(description = "Patient's last name. Cannot be null or empty", required = true) @PathVariable("last_name") String lastName) {
         MiracumInputDetailsDto inputDetails = createInputDetails(firstName, lastName);
         String directory = miracumService.getFastQDirectory(inputDetails);
         HttpStatus status;
@@ -136,15 +137,35 @@ public class MiracumController {
         return new ResponseEntity<>(directory, status);
     }
 
+    @Operation(summary = "Get by id", description = "")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Returned fastQ directory of <patient id>"),
+            @ApiResponse(responseCode = "400", description = "Could not create fastQ directory of <patient id>") })
+    @GetMapping(miracumUrl + "/fastq/directory/{id}")
+    @ResponseBody
+    public ResponseEntity<String> getFastQDirectoryById(
+            @Parameter(description = "Patient id. Cannot be null", required = true) @PathVariable String id) {
+        Optional<MiracumInputDetailsDto> inputDetailsOpt = miracumService.getInputDetailsById(id);
+        ResponseEntity<String> response;
+        if (inputDetailsOpt.isPresent()) {
+            MiracumInputDetailsDto inputDetails = inputDetailsOpt.get();
+            response = getFastQDirectoryByName(inputDetails.getPatientFirstName(), inputDetails.getPatientLastName());
+        } else {
+            LOGGER.warn("Could not find patient with id " + id);
+            response = new ResponseEntity<>("", HttpStatus.BAD_REQUEST);
+        }
+        return response;
+    }
+
     @Operation(summary = "Get by name", description = "")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Returned fastQ name of <patient name>"),
-            @ApiResponse(responseCode = "400", description = "Could not create fastQ directory of <patient_name>") })
-    @GetMapping(miracumUrl + "/fastq/names/{number_of_file_pairs}/{firstName}/{lastName}")
+            @ApiResponse(responseCode = "400", description = "Could not create fastQ directory of <patient name>") })
+    @GetMapping(miracumUrl + "/fastq/names/{number_of_file_pairs}/{first_name}/{last_name}")
     @ResponseBody
-    public ResponseEntity<List<String>> getFastQNames(
-            @Parameter(description = "Patient's first name. Cannot be null or empty", required = true) @PathVariable String firstName,
-            @Parameter(description = "Patient's last name. Cannot be null or empty", required = true) @PathVariable String lastName,
+    public ResponseEntity<List<String>> getFastQNamesByName(
+            @Parameter(description = "Patient's first name. Cannot be null or empty", required = true) @PathVariable("first_name") String firstName,
+            @Parameter(description = "Patient's last name. Cannot be null or empty", required = true) @PathVariable("last_name") String lastName,
             @Parameter(description = "Number of file pairs. Expects 1 for 1 pair (-> 2 files)", required = true) @PathVariable("number_of_file_pairs") int numberOfFilePairs) {
         MiracumInputDetailsDto inputDetails = createInputDetails(firstName, lastName);
         List<String> names = miracumService.getFastQNames(inputDetails, numberOfFilePairs);
@@ -159,6 +180,27 @@ public class MiracumController {
         return new ResponseEntity<>(names, status);
     }
 
+    @Operation(summary = "Get by id", description = "")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Returned fastQ name of <patient id>"),
+            @ApiResponse(responseCode = "400", description = "Could not create fastQ directory of <patient id>") })
+    @GetMapping(miracumUrl + "/fastq/names/{id}")
+    @ResponseBody
+    public ResponseEntity<List<String>> getFastQNamesById(
+            @Parameter(description = "Patient id. Cannot be null", required = true) @PathVariable String id) {
+        Optional<MiracumInputDetailsDto> inputDetailsOpt = miracumService.getInputDetailsById(id);
+        ResponseEntity<List<String>> response;
+        if (inputDetailsOpt.isPresent()) {
+            MiracumInputDetailsDto inputDetails = inputDetailsOpt.get();
+            response = getFastQNamesByName(inputDetails.getPatientFirstName(), inputDetails.getPatientLastName(),
+                    inputDetails.getNumberOfFilePairs());
+        } else {
+            LOGGER.warn("Could not find patient with id " + id);
+            response = new ResponseEntity<>(Collections.emptyList(), HttpStatus.BAD_REQUEST);
+        }
+        return response;
+    }
+
     private MiracumInputDetailsDto createInputDetails(String firstName, String lastName) {
         MiracumInputDetailsDto miracumInputDetails = new MiracumInputDetailsDto();
         miracumInputDetails.setPatientFirstName(firstName);
@@ -171,7 +213,8 @@ public class MiracumController {
             @ApiResponse(responseCode = "200", description = "<inputDetails>"),
             @ApiResponse(responseCode = "400", description = "<empty inputDetails>") })
     @GetMapping(miracumUrl + "/patient/input_details/{id}")
-    public ResponseEntity<MiracumInputDetailsDto> getInputDetailsById(@PathVariable String id) {
+    public ResponseEntity<MiracumInputDetailsDto> getInputDetailsById(
+            @Parameter(description = "Patient id. Cannot be null", required = true) @PathVariable String id) {
         Optional<MiracumInputDetailsDto> inputDetailsOpt = miracumService.getInputDetailsById(id);
         HttpStatus status;
         MiracumInputDetailsDto message;
@@ -190,7 +233,8 @@ public class MiracumController {
             @ApiResponse(responseCode = "200", description = "<paths>"),
             @ApiResponse(responseCode = "400", description = "<empty paths>") })
     @GetMapping(miracumUrl + "/patient/paths/{id}")
-    public ResponseEntity<MiracumPathsDto> getPathsById(@PathVariable String id) {
+    public ResponseEntity<MiracumPathsDto> getPathsById(
+            @Parameter(description = "Patient id. Cannot be null", required = true) @PathVariable String id) {
         Optional<MiracumPathsDto> pathsDto = miracumService.getPathsById(id);
         HttpStatus status;
         MiracumPathsDto message;
@@ -209,7 +253,8 @@ public class MiracumController {
             @ApiResponse(responseCode = "200", description = "Deleted patient <patient name> (<id>)"),
             @ApiResponse(responseCode = "400", description = "Could not find details for patient with id: <id>") })
     @DeleteMapping(miracumUrl + "/patient/{id}")
-    public ResponseEntity<String> deletePatient(@PathVariable String id) {
+    public ResponseEntity<String> deletePatient(
+            @Parameter(description = "Patient id. Cannot be null", required = true) @PathVariable String id) {
         Optional<MiracumInputDetailsDto> inputDetailsOpt = miracumService.getInputDetailsById(id);
         HttpStatus status;
         String message;

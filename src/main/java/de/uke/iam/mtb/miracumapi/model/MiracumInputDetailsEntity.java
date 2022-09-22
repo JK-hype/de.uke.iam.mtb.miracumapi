@@ -8,6 +8,7 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 import de.uke.iam.mtb.dto.enums.Protocol;
+import de.uke.iam.mtb.dto.enums.Sex;
 import lombok.Data;
 
 @Entity
@@ -18,7 +19,8 @@ public class MiracumInputDetailsEntity {
     @Id
     @Column(name = "patient_id")
     private String patientId;
-    private String sex;
+    @Enumerated(EnumType.STRING)
+    private Sex sex;
     @Column(name = "annotation_of_germline_findings")
     private Boolean annotationOfGermlineFindings;
     @Enumerated(EnumType.STRING)
