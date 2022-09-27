@@ -1,4 +1,4 @@
-CREATE DATABASE mriacum;
+CREATE DATABASE miracum;
 \c miracum;
 CREATE SCHEMA IF NOT EXISTS miracum;
 

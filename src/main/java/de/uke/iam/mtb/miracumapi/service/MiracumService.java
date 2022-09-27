@@ -76,11 +76,13 @@ public class MiracumService {
     private final int startTime;
     private final int endTime;
     private final int intervalTime;
+    private final int numberOfFilePairs;
 
     public MiracumService(MiracumInputDetailsRepository inputDetailsRepository, MiracumPathsRepository pathRepository,
             @Value("${pathToMIRACUM}") String pathToMiracum, @Value("${mapperUrl}") String mapperUrl,
             @Value("${quartz.startTime}") int startTime,
-            @Value("${quartz.endTime}") int endTime, @Value("${quartz.intervalTime}") int intervalTime) {
+            @Value("${quartz.endTime}") int endTime, @Value("${quartz.intervalTime}") int intervalTime,
+            @Value("${numberOfFilePairs}") int numberOfFilePairs) {
         this.inputDetailsRepository = inputDetailsRepository;
         this.pathsRepository = pathRepository;
         this.pathToMiracum = pathToMiracum;
@@ -88,6 +90,7 @@ public class MiracumService {
         this.startTime = startTime;
         this.endTime = endTime;
         this.intervalTime = intervalTime;
+        this.numberOfFilePairs = numberOfFilePairs;
         this.pathBuilder = new MiracumPathBuilder(pathToMiracum);
     }
 
@@ -268,10 +271,8 @@ public class MiracumService {
         String pathToPatientInput = pathBuilder
                 .buildFilePathToPatientInput(inputDetails.getPatientNameWithUnderscore());
         ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
-        String[] files = new File(pathToPatientInput).list();
         inputDetails.setNumberOfFilePairs(
-                (int) (Arrays.asList(files).stream()
-                        .filter(f -> f.contains(inputDetails.getPatientNameWithUnderscore())).count()));
+                inputDetails.getNumberOfFilePairs() > 0 ? inputDetails.getNumberOfFilePairs() : numberOfFilePairs);
         objectMapper.registerModule(
                 new SimpleModule().addSerializer(MiracumInputDetailsDto.class,
                         new MiracumInputDetailsToYamlSerializer()));
